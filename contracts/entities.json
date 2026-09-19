@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "domain": "森林康养路线风险联动",
+  "required_fields": [
+    "route_ref",
+    "segment_ref",
+    "team_ref",
+    "window_start",
+    "capacity"
+  ],
+  "time_format": "ISO 8601 with offset",
+  "sample": {
+    "route_ref": "ROUTE-DEMO",
+    "segment_ref": "WATERFALL-A",
+    "capacity": 35
+  }
+}
