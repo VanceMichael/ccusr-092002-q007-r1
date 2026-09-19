@@ -1,17 +1,81 @@
 {
-  "schema_version": "1",
-  "domain": "森林康养路线风险联动",
-  "required_fields": [
-    "route_ref",
-    "segment_ref",
-    "team_ref",
-    "window_start",
-    "capacity"
-  ],
+  "schema_version": "2",
+  "domain": "天堂寨分段行程接续",
   "time_format": "ISO 8601 with offset",
+  "identity_note": "所有 *_ref 标识符仅表示提交方对同一记录的识别符，示例不含真实个人资料；带队人员身份经 X-Leader-Ref 请求头与登记信息比对。",
+  "entities": {
+    "segment": {
+      "path": "PUT /segments/{segment_ref}",
+      "required_fields": ["route_ref", "level", "seq"],
+      "level_enum": ["beginner", "intermediate", "advanced"]
+    },
+    "exit": {
+      "path": "PUT /exits/{exit_ref}",
+      "required_fields": ["route_ref"]
+    },
+    "connection": {
+      "path": "PUT /connections/{conn_ref}",
+      "required_fields": ["from_ref", "to_ref", "kind"],
+      "kind_enum": ["trail", "cableway", "evacuation"],
+      "note": "from_ref / to_ref 可为路段或出口；索道属于 cableway。"
+    },
+    "team": {
+      "path": "POST /teams",
+      "required_fields": ["team_ref", "leader_ref", "route_ref", "level"]
+    },
+    "team_members": {
+      "path": "PUT|GET /teams/{team_ref}/members",
+      "required_fields": ["members[].member_ref", "members[].display_name"],
+      "access": "仅所属带队人员（X-Leader-Ref 匹配 leader_ref）"
+    },
+    "checkin": {
+      "path": "POST /teams/{team_ref}/checkins",
+      "required_fields": ["segment_ref", "event", "occurred_at"],
+      "event_enum": ["arrive", "leave"],
+      "server_fields": ["uploaded_at", "source"],
+      "note": "occurred_at 为现场原始时间，uploaded_at 为服务端接收时间；断网补报时 source=backfill，两者均保留。"
+    },
+    "notice": {
+      "path": "POST /notices",
+      "required_fields": ["notice_ref", "target_kind", "target_ref", "change", "effective_from", "published_by"],
+      "target_kind_enum": ["segment", "connection"],
+      "change_enum": ["open", "closed"],
+      "optional_fields": ["effective_until"],
+      "note": "发布后系统立即评估全部在场队伍并返回分类与替代连接建议。"
+    },
+    "evaluation": {
+      "classification_enum": ["not_started", "can_reroute", "in_affected_zone"],
+      "note": "仅 not_started / can_reroute 队伍获得 reroute_offers；in_affected_zone 队伍只能登记 decision。"
+    },
+    "reroute_offer": {
+      "respond_path": "POST /offers/{offer_ref}/respond",
+      "required_fields": ["action"],
+      "action_enum": ["accept", "decline"]
+    },
+    "decision": {
+      "path": "POST /teams/{team_ref}/decisions",
+      "required_fields": ["decision", "decided_by"],
+      "decision_enum": ["wait", "retreat", "escort"]
+    },
+    "booking": {
+      "path": "POST /bookings",
+      "required_fields": ["team_ref", "exit_ref", "vehicle_ref", "window_start", "window_end"],
+      "exclusivity": "同一 exit_ref 或同一 vehicle_ref 的 active 预订时间窗不得重叠，冲突返回 409；首尾相接不算重叠。",
+      "release_path": "POST /bookings/{booking_ref}/release"
+    },
+    "review": {
+      "path": "GET /review?notice_ref={notice_ref}",
+      "note": "按队伍给出分类、建议、决定、接驳预订与 exit_account（最终如何离开受影响区域）。"
+    },
+    "occupancy": {
+      "path": "GET /occupancy",
+      "note": "各路段当前停留队伍，供带队人员共享可信的路线占用信息。"
+    }
+  },
   "sample": {
-    "route_ref": "ROUTE-DEMO",
-    "segment_ref": "WATERFALL-A",
-    "capacity": 35
+    "route_ref": "ROUTE-MID",
+    "segment_ref": "S2",
+    "team_ref": "TEAM-B",
+    "occurred_at": "2026-09-19T09:40:00+08:00"
   }
 }

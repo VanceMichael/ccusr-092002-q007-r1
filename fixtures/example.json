@@ -1,5 +1,55 @@
 {
-  "route_ref": "ROUTE-DEMO",
-  "segment_ref": "WATERFALL-A",
-  "capacity": 35
+  "说明": "天堂寨分段行程接续交换示例，所有标识符均为演示编号，不含真实个人资料。",
+  "场景": "中级步道 ROUTE-MID：S1-S2-S3 依次相连，S3 经索道 CABLE 通往谷底 S4；EV1 为通往东出口的疏散通道。索道临时停运。",
+  "steps": [
+    {
+      "step": 1,
+      "action": "PUT /segments/S2",
+      "body": {"route_ref": "ROUTE-MID", "level": "intermediate", "seq": 2}
+    },
+    {
+      "step": 2,
+      "action": "PUT /connections/CABLE",
+      "body": {"from_ref": "S3", "to_ref": "S4", "kind": "cableway"}
+    },
+    {
+      "step": 3,
+      "action": "POST /teams",
+      "body": {"team_ref": "TEAM-B", "leader_ref": "LEADER-B", "route_ref": "ROUTE-MID", "level": "intermediate"}
+    },
+    {
+      "step": 4,
+      "action": "PUT /teams/TEAM-B/members",
+      "headers": {"X-Leader-Ref": "LEADER-B"},
+      "body": {"members": [{"member_ref": "M-01", "display_name": "游客甲"}, {"member_ref": "M-02", "display_name": "游客乙", "note": "需轮椅协助"}]}
+    },
+    {
+      "step": 5,
+      "action": "POST /teams/TEAM-B/checkins",
+      "body": {"segment_ref": "S2", "event": "arrive", "occurred_at": "2026-09-19T09:40:00+08:00"},
+      "说明": "山区断网补报：服务端另记 uploaded_at，source=backfill"
+    },
+    {
+      "step": 6,
+      "action": "POST /notices",
+      "body": {"notice_ref": "N1", "target_kind": "connection", "target_ref": "CABLE", "change": "closed", "effective_from": "2026-09-19T10:00:00+08:00", "published_by": "MAINT-1"},
+      "响应要点": "TEAM-B 分类为 can_reroute 并获得替代连接建议；已入谷队伍分类为 in_affected_zone，仅可登记决定"
+    },
+    {
+      "step": 7,
+      "action": "POST /teams/TEAM-C/decisions",
+      "body": {"decision": "escort", "decided_by": "LEADER-C", "note": "由维护人员沿检修道护送"}
+    },
+    {
+      "step": 8,
+      "action": "POST /bookings",
+      "body": {"team_ref": "TEAM-B", "exit_ref": "EXIT-EAST", "vehicle_ref": "VEH-1", "window_start": "2026-09-19T14:00:00+08:00", "window_end": "2026-09-19T15:00:00+08:00"},
+      "说明": "同一出口或同一车辆时段重叠返回 409"
+    },
+    {
+      "step": 9,
+      "action": "GET /review?notice_ref=N1",
+      "响应要点": "每支队伍的分类、决定、接驳预订与 exit_account（最终如何离开受影响区域）"
+    }
+  ]
 }
