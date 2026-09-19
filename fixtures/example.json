@@ -1,5 +1,46 @@
 {
-  "route_ref": "ROUTE-DEMO",
-  "segment_ref": "WATERFALL-A",
-  "capacity": 35
+  "scenario": "索道大风临时停运的分段接续示例（全部为合成编号，无真实个人资料）",
+  "facility_event": {
+    "facility_ref": "ROPE-1",
+    "status": "SUSPENDED",
+    "changed_at": "2026-09-19T09:05:00+08:00",
+    "notice": "峡谷阵风，索道临时停运"
+  },
+  "teams": [
+    {
+      "team_ref": "TEAM-DEMO-1",
+      "trail_level": "BEGINNER",
+      "state": "尚未入谷，停留在 STAGING",
+      "action": {
+        "connection_ref": "ALT-RIDGE",
+        "decision": "REROUTE"
+      }
+    },
+    {
+      "team_ref": "TEAM-DEMO-2",
+      "trail_level": "ADVANCED",
+      "state": "已在 VALLEY-1 临瀑谷道",
+      "backfill_checkin": {
+        "segment_ref": "VALLEY-1",
+        "action": "ENTER",
+        "occurred_at": "2026-09-19T07:50:00+08:00",
+        "uploaded_at": "2026-09-19T11:02:14+08:00",
+        "is_backfill": true
+      },
+      "action": {
+        "decision": "ESCORT",
+        "note": "先原地等待，后由维护人员人工护送"
+      }
+    }
+  ],
+  "reservation_conflict_example": {
+    "exit_ref": "EAST-GATE",
+    "shuttle_ref": "BUS-1",
+    "claimed_window": "2026-09-19T10:00:00+08:00/2026-09-19T10:30:00+08:00",
+    "rejected_overlap": "2026-09-19T10:15:00+08:00/2026-09-19T10:45:00+08:00"
+  },
+  "review": {
+    "TEAM-DEMO-1": "REROUTED",
+    "TEAM-DEMO-2": "ESCORTED"
+  }
 }

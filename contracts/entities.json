@@ -1,16 +1,66 @@
 {
-  "schema_version": "1",
+  "schema_version": "2",
   "domain": "森林康养路线风险联动",
-  "required_fields": [
-    "route_ref",
-    "segment_ref",
-    "team_ref",
-    "window_start",
-    "capacity"
-  ],
   "time_format": "ISO 8601 with offset",
+  "time_rules": [
+    "入参时间必须带时区偏移，例如 2026-09-19T10:00:00+08:00",
+    "断网补报时 occurred_at 为现场原始时间，uploaded_at 为服务端实际上传时间，两者都持久化",
+    "时间窗重叠判定使用归一化 UTC 值，展示与复盘保留原始字符串"
+  ],
+  "auth": {
+    "leader": "请求头 X-Leader-Ref 标识带队人员，仅能操作本队",
+    "maintenance": "请求头 X-Staff-Role: MAINTENANCE 标识维护人员，负责发布与复盘"
+  },
+  "entities": {
+    "team": ["team_ref", "display_name", "leader_ref", "trail_level"],
+    "visitor": ["team_ref", "visitor_ref", "display_name"],
+    "segment": ["segment_ref", "route_ref", "position", "in_valley", "capacity"],
+    "checkin_event": [
+      "team_ref",
+      "segment_ref",
+      "action (ENTER|LEAVE)",
+      "occurred_at",
+      "uploaded_at",
+      "is_backfill"
+    ],
+    "ropeway_status": ["facility_ref", "status (OPEN|SUSPENDED)", "changed_at"],
+    "closure": ["segment_ref", "reason", "active"],
+    "evacuation_channel": ["channel_ref", "from_segment_ref", "direction", "to_exit_ref", "open"],
+    "alternative_connection": [
+      "connection_ref",
+      "from_segment_ref",
+      "to_segment_ref",
+      "kind",
+      "trail_level",
+      "active"
+    ],
+    "reroute_decision": ["team_ref", "connection_ref", "decided_at"],
+    "valley_decision": ["team_ref", "decision (WAIT|RETURN|ESCORT)", "decided_at", "superseded"],
+    "reservation": [
+      "team_ref",
+      "exit_ref",
+      "shuttle_ref",
+      "window_start",
+      "window_end",
+      "status (CLAIMED|RELEASED)"
+    ],
+    "evacuation_outcome": [
+      "team_ref",
+      "how (REROUTED|WAITED_AND_RESUMED|TURNED_BACK|ESCORTED)",
+      "exit_ref",
+      "shuttle_ref",
+      "left_affected_at"
+    ]
+  },
+  "business_rules": [
+    "仅未入谷队伍可查询并采用替代连接；已入谷队伍只能登记 WAIT/RETURN/ESCORT",
+    "替代连接起终点封闭或步道等级不符时不对该队开放",
+    "同一出口或接驳车辆在重叠时间窗内不能被多支队伍 CLAIMED 占用（半开区间）",
+    "游客名单仅所属带队人员可读",
+    "复盘结果 how 必须与该队当前有效的改线/入谷决定一致"
+  ],
   "sample": {
-    "route_ref": "ROUTE-DEMO",
+    "route_ref": "TTZ-MAIN",
     "segment_ref": "WATERFALL-A",
     "capacity": 35
   }
